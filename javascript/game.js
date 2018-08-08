@@ -1,3 +1,4 @@
+var moveToWin = [
 	[(/ OO....../),0],
 	[(/O..O.. ../),6],
 	[(/......OO /),8],
@@ -19,6 +20,7 @@
 	[(/.O..O.. ./),7],
 	[(/...OO .../),5]
 ];
+var moveToBlockOpponent = [
 	[(/  X . X  /),1],
 	[(/ XX....../),0],
 	[(/X..X.. ../),6],
@@ -79,7 +81,9 @@ var players = [player1, player2];
 var currentPlayer = player1;
 
 var comp = function(){
+	var position = get_from_pattern(moveToWin);
 	if (position == -1){
+		position = get_from_pattern(moveToBlockOpponent);
 	}
 	if (position == -1 && board[4] == ' '){
 		position = 4;
@@ -95,12 +99,10 @@ var move = function(position,forPlayer){
 	if (forPlayer != currentPlayer){
 		return false;
 	}
-	if (position >= 0 && position <= 8 && !isNaN(position) && board[position] == ' '){
-		board.splice(position, 1, forPlayer);
-		currentPlayer = (forPlayer == player1)? player2: player1;
-		return true;
-	}
-	return false;
+	
+	board.splice(position, 1, forPlayer);
+	currentPlayer = (forPlayer == player1)? player2: player1;
+	return true;
 };
 
 var board_display = function(){
@@ -149,18 +151,33 @@ var exit = function(){ process.exit(); };
 
 var play = function(){
 	show();
-	console.log('Enter [0-8]:');
+	console.log('Enter a number from 1 to 9:');
 	process.openStdin().on('data', function(res){ 
-		if (move(+res, player1)){
-			var winner = winner();
+		var input = Number.parseInt(res);
+		
+		if(isNaN(input) || input < 1 || input > 9){
+			console.log('That is not a position. You must enter a number from 1 to 9:');
+			return;
+		}
+
+		var position = input - 1;
+
+		if(board[position] != ' '){
+			console.log('That position is already taken. Try another one:')
+		}
+
+		if (move(position, player1)){
+			var hasWinner = winner();
 			var filled = board_filled();
-			if (winner || filled) { exit(); }
+			if (hasWinner || filled) { exit(); }
 			else {
 				comp();
-				if (winner || filled) { exit(); }
+				if (hasWinner || filled) { exit(); }
 				else { show(); }
 			}
 		}
+
+		console.log('Enter a number from 1 to 9:');
 	});
 };
 
