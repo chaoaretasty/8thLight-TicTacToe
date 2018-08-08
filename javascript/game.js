@@ -100,7 +100,50 @@ function Player(symbol, playerType){
 	}
 }
 
-var getHumanMove = function(){
+function Board(){
+	var boardState = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
+	var winner = null;
+	var isFull = false;
+	
+	checkWinner = function(){
+		var winningSymbol = get_from_pattern(winningPatterns, boardState);
+		if (winningSymbol != -1){
+			winner = winningSymbol;
+		}
+	}
+	
+	checkFull = function(){
+		isFull = boardState.indexOf(' ') == -1;
+	}
+
+	this.getState = function(){
+		return { 
+			winner: winner, 
+			isFull: isFull,
+			boardState: boardState.slice()
+		};
+	}
+
+	this.move = function(position, player){
+		boardState[position] = player.symbol;
+		checkFull();
+		checkWinner();
+	}
+
+	this.show = function(){
+		console.log('\n');
+		console.log(this.printBoard());
+		console.log('\n');
+	}
+
+	this.printBoard = function(){
+		return 	` ${boardState[0]} | ${boardState[1]} | ${boardState[2]}\n===+===+===\n` +
+				` ${boardState[3]} | ${boardState[4]} | ${boardState[5]}\n===+===+===\n` +
+				` ${boardState[6]} | ${boardState[7]} | ${boardState[8]}`;
+	};
+}
+
+var getHumanMove = function(board){
 	while (true)
 	{
 		var ans = readlineSync.question(`Player ${this.symbol} Enter a number from 1 to 9:\n`);
@@ -125,10 +168,10 @@ var getHumanMove = function(){
 	}
 };
 
-var getCompMove = function(){
-	var position = get_from_pattern(moveToWin);
+var getCompMove = function(board){
+	var position = get_from_pattern(moveToWin, board);
 	if (position == -1){
-		position = get_from_pattern(moveToBlockOpponent);
+		position = get_from_pattern(moveToBlockOpponent, board);
 	}
 	if (position == -1 && board[4] == ' '){
 		position = 4;
@@ -142,44 +185,7 @@ var getCompMove = function(){
 	return position;
 };
 
-var move = function(position,forPlayer){
-	board.splice(position, 1, forPlayer.symbol);
-};
-
-var board_display = function(){
-	return 	' ' + board[0] + ' |' + ' ' + board[1] + ' |' + ' ' + board[2] + '\n===+===+===\n' +
-			' ' + board[3] + ' |' + ' ' + board[4] + ' |' + ' ' + board[5] + '\n===+===+===\n' +
-			' ' + board[6] + ' |'+' ' + board[7] + ' |' + ' ' + board[8];
-};
-
-var show = function(){
-	console.log('\n');
-	console.log(board_display());
-	console.log('\n');
-};
-
-var board_filled = function(){
-	if (board.indexOf(' ') == -1){
-		show();
-		console.log('Game over');
-		return true;
-	}
-	return false;
-};
-
-var winner = function(){
-	var winner = get_from_pattern(winningPatterns);
-	
-	if (winner != -1){
-		show();
-		console.log('Game over');
-		return true;
-	}
-
-	return false;
-};
-
-var get_from_pattern = function(pattern){
+var get_from_pattern = function(pattern, board){
 	var board_string = board.join('');
 	for(var i = 0; i < pattern.length; i++){
 		var array = board_string.match(pattern[i][0]);
@@ -201,13 +207,25 @@ var play = function(){
 
 	currentPlayer = players[0];
 
+	var board = new Board();
+	board.show();
+
 	while(true){
-		show();
-		var playerPos = currentPlayer.getMove();
-		move(playerPos, currentPlayer);
-		var hasWinner = winner();
-		var filled = board_filled();
-		if (hasWinner || filled) { exit(); }
+		var playerPos = currentPlayer.getMove(board.getState().boardState);
+		board.move(playerPos, currentPlayer);
+		board.show();
+
+		var gameState = board.getState();
+		
+		if (gameState.winner != null){
+			console.log(`The winner is player ${gameState.winner}!`);
+			exit();
+		}
+		
+		if(gameState.isFull){
+			console.log('Tied game!')
+			exit();
+		}
 		
 		currentPlayer = players[0] == currentPlayer ? players[1] : players[0];
 	}
