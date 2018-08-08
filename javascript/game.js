@@ -5,61 +5,75 @@ const readlineSync = require('readline-sync');
 /* eslint-disable no-regex-spaces */
 var moveToWin = [
 	[(/ OO....../),0],
-	[(/O..O.. ../),6],
-	[(/......OO /),8],
-	[(/.. ..O..O/),2],
-	[(/ ..O..O../),0],
-	[(/...... OO/),6],
-	[(/..O..O.. /),8],
-	[(/OO ....../),2],
-	[(/ ...O...O/),0],
-	[(/..O.O. ../),6],
-	[(/O...O... /),8],
-	[(/.. .O.O../),2],
 	[(/O O....../),1],
-	[(/O.. ..O../),3],
-	[(/......O O/),7],
-	[(/..O.. ..O/),5],
-	[(/. ..O..O./),1],
+	[(/OO ....../),2],
 	[(/... OO.../),3],
+	[(/...O O.../),4],
+	[(/...OO .../),5],
+	[(/...... OO/),6],
+	[(/......O O/),7],
+	[(/......OO /),8],
+	[(/ ..O..O../),0],
+	[(/O.. ..O../),3],
+	[(/O..O.. ../),6],
+	[(/. ..O..O./),1],
+	[(/.O.. ..O./),4],
 	[(/.O..O.. ./),7],
-	[(/...OO .../),5]
+	[(/.. ..O..O/),2],
+	[(/..O.. ..O/),5],
+	[(/..O..O.. /),8],
+	[(/ ...O...O/),0],
+	[(/O... ...O/),4],
+	[(/O...O... /),8],
+	[(/.. .O.O../),2],	
+	[(/..O. .O../),4],	
+	[(/..O.O. ../),6],
 ];
-var moveToBlockOpponent = [
-	[(/  X . X  /),1],
+var moveToBlockWin = [
 	[(/ XX....../),0],
-	[(/X..X.. ../),6],
-	[(/......XX /),8],
-	[(/.. ..X..X/),2],
-	[(/ ..X..X../),0],
-	[(/...... XX/),6],
-	[(/..X..X.. /),8],
+	[(/X X....../),1],
 	[(/XX ....../),2],
+	[(/... XX.../),3],
+	[(/...X X.../),4],
+	[(/...XX .../),5],
+	[(/...... XX/),6],
+	[(/......X X/),7],
+	[(/......XX /),8],
+	[(/ ..X..X../),0],
+	[(/X.. ..X../),3],
+	[(/X..X.. ../),6],
+	[(/. ..X..X./),1],
+	[(/.X.. ..X./),4],
+	[(/.X..X.. ./),7],
+	[(/.. ..X..X/),2],
+	[(/..X.. ..X/),5],
+	[(/..X..X.. /),8],
 	[(/ ...X...X/),0],
-	[(/..X.X. ../),6],
+	[(/X... ...X/),4],
 	[(/X...X... /),8],
 	[(/.. .X.X../),2],
-	[(/X X....../),1],
-	[(/X.. ..X../),3],
-	[(/......X X/),7],
-	[(/..X.. ..X/),5],
-	[(/. ..X..X./),1],
-	[(/... XX.../),3],
-	[(/.X..X.. ./),7],
-	[(/...XX .../),5],
-	[(/ X X.. ../),0],
-	[(/ ..X.. X /),6],
-	[(/.. ..X X /),8],
-	[(/ X ..X.. /),2],
-	[(/  XX.. ../),0],
-	[(/X.. .. X /),6],
-	[(/.. .XX   /),8],
-	[(/X  ..X.. /),2],
-	[(/ X  ..X../),0],
-	[(/ ..X..  X/),6],
-	[(/..X..  X /),8],
-	[(/X  ..X.. /),2]
+	[(/..X. .X../),4],
+	[(/..X.X. ../),6]
 ];
+
+var moveToCorners = [
+	//Pattern 1
+	[(/  XX.. ../), 0],
+	[(/ X .. ..X/), 2],
+	[(/X.. .. X /), 6],
+	[(/.. ..XX  /), 8],
+	//Pattern 2
+	[(/ X  ..X../), 0],
+	[(/X  ..X.. /), 2],
+	[(/ ..X..  X/), 6],
+	[(/..X..  X /), 8],
+	//Pattern 3
+	[(/ X X.. ../), 0],
+	[(/ X ..X.. /), 2],
+	[(/ ..X.. X /), 6],
+	[(/.. ..X X /), 8]
+];
+
 var winningPatterns = [
 	[(/OOO....../),'O'],
 	[(/...OOO.../),'O'],
@@ -84,13 +98,13 @@ var players = [];
 var currentPlayer;
 var playerTypes = {
 	HUMAN: 'Human',
-	COMPUTER: 'Computer'
+	COMPUTER_HARD: 'Computer - Hard'
 };
 
 function Player(symbol, playerType){
 	this.symbol = symbol;
 	switch(playerType){
-		case playerTypes.COMPUTER:
+		case playerTypes.COMPUTER_HARD:
 			this.getMove = getCompMove;
 			break;
 		case playerTypes.HUMAN:
@@ -172,7 +186,10 @@ var getHumanMove = function(board){
 var getCompMove = function(board){
 	var position = get_from_pattern(moveToWin, board);
 	if (position == -1){
-		position = get_from_pattern(moveToBlockOpponent, board);
+		position = get_from_pattern(moveToBlockWin, board);
+	}
+	if (position == -1){
+		position = get_from_pattern(moveToCorners, board);
 	}
 	if (position == -1 && board[4] == ' '){
 		position = 4;
@@ -200,7 +217,7 @@ var get_from_pattern = function(pattern, board){
 var exit = function(){ process.exit(); };
 
 var play = function(){
-	var types = [playerTypes.HUMAN, playerTypes.COMPUTER];
+	var types = [playerTypes.HUMAN, playerTypes.COMPUTER_HARD];
 	var p1 = readlineSync.keyInSelect(types, 'Select player 1', { cancel:false });
 	var p2 = readlineSync.keyInSelect(types, 'Select player 2', { cancel:false });
 
