@@ -103,7 +103,7 @@ function Player(symbol, playerType){
 var getHumanMove = function(){
 	while (true)
 	{
-		var ans = readlineSync.question('Enter a number from 1 to 9:\n');
+		var ans = readlineSync.question(`Player ${this.symbol} Enter a number from 1 to 9:\n`);
 		
 		if(ans=="quit"){exit();}
 
@@ -137,6 +137,8 @@ var getCompMove = function(){
 		position = board.indexOf(' ');
 	}
 
+	console.log(`Player ${this.symbol} selected position ${position}`);
+
 	return position;
 };
 
@@ -153,6 +155,7 @@ var board_display = function(){
 var show = function(){
 	console.log('\n');
 	console.log(board_display());
+	console.log('\n');
 };
 
 var board_filled = function(){
@@ -190,7 +193,11 @@ var get_from_pattern = function(pattern){
 var exit = function(){ process.exit(); };
 
 var play = function(){
-	players.push(new Player('X', playerTypes.HUMAN), new Player('O', playerTypes.COMPUTER))
+	var types = [playerTypes.HUMAN, playerTypes.COMPUTER];
+	var p1 = readlineSync.keyInSelect(types, "Select player 1", { cancel:false });
+	var p2 = readlineSync.keyInSelect(types, "Select player 2", { cancel:false });
+
+	players.push(new Player('X', types[p1]), new Player('O', types[p2]));
 
 	currentPlayer = players[0];
 
