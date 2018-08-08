@@ -2,7 +2,7 @@
 //At the very least while refactoring it makes sense to have this syncronous
 const readlineSync = require('readline-sync');
 
-
+/* eslint-disable no-regex-spaces */
 var moveToWin = [
 	[(/ OO....../),0],
 	[(/O..O.. ../),6],
@@ -78,8 +78,8 @@ var winningPatterns = [
 	[(/X...X...X/),'X'],
 	[(/..X.X.X../),'X']
 ];
+/* eslint-enable no-regex-spaces */
 
-var board = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
 var players = [];
 var currentPlayer;
 var playerTypes = {
@@ -105,16 +105,16 @@ function Board(){
 	var winner = null;
 	var isFull = false;
 	
-	checkWinner = function(){
+	var checkWinner = function(){
 		var winningSymbol = get_from_pattern(winningPatterns, boardState);
 		if (winningSymbol != -1){
 			winner = winningSymbol;
 		}
-	}
+	};
 	
-	checkFull = function(){
+	var checkFull = function(){
 		isFull = boardState.indexOf(' ') == -1;
-	}
+	};
 
 	this.getState = function(){
 		return { 
@@ -122,19 +122,19 @@ function Board(){
 			isFull: isFull,
 			boardState: boardState.slice()
 		};
-	}
+	};
 
 	this.move = function(position, player){
 		boardState[position] = player.symbol;
 		checkFull();
 		checkWinner();
-	}
+	};
 
 	this.show = function(){
 		console.log('\n');
 		console.log(this.printBoard());
 		console.log('\n');
-	}
+	};
 
 	this.printBoard = function(){
 		return 	` ${boardState[0]} | ${boardState[1]} | ${boardState[2]}\n===+===+===\n` +
@@ -144,11 +144,12 @@ function Board(){
 }
 
 var getHumanMove = function(board){
+	/* eslint-disable-next-line no-constant-condition */
 	while (true)
 	{
 		var ans = readlineSync.question(`Player ${this.symbol} Enter a number from 1 to 9:\n`);
 		
-		if(ans=="quit"){exit();}
+		if(ans=='quit'){exit();}
 
 		var input = Number.parseInt(ans);
 
@@ -200,8 +201,8 @@ var exit = function(){ process.exit(); };
 
 var play = function(){
 	var types = [playerTypes.HUMAN, playerTypes.COMPUTER];
-	var p1 = readlineSync.keyInSelect(types, "Select player 1", { cancel:false });
-	var p2 = readlineSync.keyInSelect(types, "Select player 2", { cancel:false });
+	var p1 = readlineSync.keyInSelect(types, 'Select player 1', { cancel:false });
+	var p2 = readlineSync.keyInSelect(types, 'Select player 2', { cancel:false });
 
 	players.push(new Player('X', types[p1]), new Player('O', types[p2]));
 
@@ -210,6 +211,7 @@ var play = function(){
 	var board = new Board();
 	board.show();
 
+	/* eslint-disable-next-line no-constant-condition */
 	while(true){
 		var playerPos = currentPlayer.getMove(board.getState().boardState);
 		board.move(playerPos, currentPlayer);
@@ -223,7 +225,7 @@ var play = function(){
 		}
 		
 		if(gameState.isFull){
-			console.log('Tied game!')
+			console.log('Tied game!');
 			exit();
 		}
 		
