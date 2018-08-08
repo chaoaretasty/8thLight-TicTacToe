@@ -1,3 +1,8 @@
+//While node is an asynchronous environment synchronous user input is an acceptable exception
+//At the very least while refactoring it makes sense to have this syncronous
+const readlineSync = require('readline-sync');
+
+
 var moveToWin = [
 	[(/ OO....../),0],
 	[(/O..O.. ../),6],
@@ -75,12 +80,52 @@ var winningPatterns = [
 ];
 
 var board = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
-var player1 = 'X';
-var player2 = 'O';
-var players = [player1, player2];
-var currentPlayer = player1;
+var players = [];
+var currentPlayer;
+var playerTypes = {
+	HUMAN: 'Human',
+	COMPUTER: 'Computer'
+};
 
-var comp = function(){
+function Player(symbol, playerType){
+	this.symbol = symbol;
+	switch(playerType){
+		case playerTypes.COMPUTER:
+			this.getMove = getCompMove;
+			break;
+		case playerTypes.HUMAN:
+		default:
+			this.getMove = getHumanMove;
+			break;
+	}
+}
+
+var getHumanMove = function(){
+	while (true)
+	{
+		var ans = readlineSync.question('Enter a number from 1 to 9:\n');
+		
+		if(ans=="quit"){exit();}
+
+		var input = Number.parseInt(ans);
+
+		if(isNaN(input) || input < 1 || input > 9){
+			console.log('That is not a position. You must enter a number from 1 to 9:\n');
+			continue;
+		}
+
+		var position = input - 1;
+
+		if(board[position] != ' '){
+			console.log('That position is already taken. Try another one:\n');
+			continue;
+		}
+
+		return position;
+	}
+};
+
+var getCompMove = function(){
 	var position = get_from_pattern(moveToWin);
 	if (position == -1){
 		position = get_from_pattern(moveToBlockOpponent);
@@ -92,17 +137,11 @@ var comp = function(){
 		position = board.indexOf(' ');
 	}
 
-	move(position, player2);
+	return position;
 };
 
 var move = function(position,forPlayer){
-	if (forPlayer != currentPlayer){
-		return false;
-	}
-	
-	board.splice(position, 1, forPlayer);
-	currentPlayer = (forPlayer == player1)? player2: player1;
-	return true;
+	board.splice(position, 1, forPlayer.symbol);
 };
 
 var board_display = function(){
@@ -112,6 +151,7 @@ var board_display = function(){
 };
 
 var show = function(){
+	console.log('\n');
 	console.log(board_display());
 };
 
@@ -150,35 +190,20 @@ var get_from_pattern = function(pattern){
 var exit = function(){ process.exit(); };
 
 var play = function(){
-	show();
-	console.log('Enter a number from 1 to 9:');
-	process.openStdin().on('data', function(res){ 
-		var input = Number.parseInt(res);
+	players.push(new Player('X', playerTypes.HUMAN), new Player('O', playerTypes.COMPUTER))
+
+	currentPlayer = players[0];
+
+	while(true){
+		show();
+		var playerPos = currentPlayer.getMove();
+		move(playerPos, currentPlayer);
+		var hasWinner = winner();
+		var filled = board_filled();
+		if (hasWinner || filled) { exit(); }
 		
-		if(isNaN(input) || input < 1 || input > 9){
-			console.log('That is not a position. You must enter a number from 1 to 9:');
-			return;
-		}
-
-		var position = input - 1;
-
-		if(board[position] != ' '){
-			console.log('That position is already taken. Try another one:')
-		}
-
-		if (move(position, player1)){
-			var hasWinner = winner();
-			var filled = board_filled();
-			if (hasWinner || filled) { exit(); }
-			else {
-				comp();
-				if (hasWinner || filled) { exit(); }
-				else { show(); }
-			}
-		}
-
-		console.log('Enter a number from 1 to 9:');
-	});
+		currentPlayer = players[0] == currentPlayer ? players[1] : players[0];
+	}
 };
 
 play();
