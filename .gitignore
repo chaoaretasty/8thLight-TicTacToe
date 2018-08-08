@@ -21,3 +21,6 @@ $RECYCLE.BIN/
 # =========================
 # Operating System Files
 # =========================
+javascript/.eslintrc.js
+javascript/package.json
+javascript/.vscode/settings.json
