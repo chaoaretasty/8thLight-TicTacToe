@@ -216,10 +216,22 @@ var exit = function(){ process.exit(); };
 
 var play = function(){
 	var types = [playerTypes.HUMAN, playerTypes.COMPUTER_HARD];
+	var p1Symbol, p2Symbol;
 	var p1 = readlineSync.keyInSelect(types, 'Select player 1', { cancel:false });
+	p1Symbol = readlineSync.keyIn('Select player 1 symbol:');
 	var p2 = readlineSync.keyInSelect(types, 'Select player 2', { cancel:false });
 
-	players.push(new Player('X', types[p1]), new Player('O', types[p2]));
+	var sameSymbol = true;
+
+	while(sameSymbol){
+		p2Symbol = readlineSync.keyIn('Select player 2 symbol:');
+		sameSymbol = p1Symbol == p2Symbol;
+		if(sameSymbol){
+			console.log('Player 2 must use a different symbol:');
+		}
+	}
+
+	players.push(new Player(p1Symbol, types[p1]), new Player(p2Symbol, types[p2]));
 
 	currentPlayer = players[0];
 
