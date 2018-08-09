@@ -2,97 +2,112 @@
 //At the very least while refactoring it makes sense to have this syncronous
 const readlineSync = require('readline-sync');
 
-/* eslint-disable no-regex-spaces */
+var PositionEnum = {
+	NONE: 0,
+	SELF: 1,
+	OPPONENT: 2,
+	ANY: 3
+};
+
+//Questionable if enum value of enum label would be more appropriate here.
+//The label is clearer but when written out patterns are much harder to see so its helpfulness is questionable
+//Groups are ordered and labelled by type to help check
+
 var moveToWin = [
-	[(/ OO....../),0],
-	[(/O O....../),1],
-	[(/OO ....../),2],
-	[(/... OO.../),3],
-	[(/...O O.../),4],
-	[(/...OO .../),5],
-	[(/...... OO/),6],
-	[(/......O O/),7],
-	[(/......OO /),8],
-	[(/ ..O..O../),0],
-	[(/O.. ..O../),3],
-	[(/O..O.. ../),6],
-	[(/. ..O..O./),1],
-	[(/.O.. ..O./),4],
-	[(/.O..O.. ./),7],
-	[(/.. ..O..O/),2],
-	[(/..O.. ..O/),5],
-	[(/..O..O.. /),8],
-	[(/ ...O...O/),0],
-	[(/O... ...O/),4],
-	[(/O...O... /),8],
-	[(/.. .O.O../),2],	
-	[(/..O. .O../),4],	
-	[(/..O.O. ../),6],
+	//Horizontal
+	[[0, 1, 1, 3, 3, 3, 3, 3, 3],0],
+	[[1, 0, 1, 3, 3, 3, 3, 3, 3],1],
+	[[1, 1, 0, 3, 3, 3, 3, 3, 3],2],
+	[[3, 3, 3, 0, 1, 1, 3, 3, 3],3],
+	[[3, 3, 3, 1, 0, 1, 3, 3, 3],4],
+	[[3, 3, 3, 1, 1, 0, 3, 3, 3],5],
+	[[3, 3, 3, 3, 3, 3, 0, 1, 1],6],
+	[[3, 3, 3, 3, 3, 3, 1, 0, 1],7],
+	[[3, 3, 3, 3, 3, 3, 1, 1, 0],8],
+	//Vertical
+	[[0, 3, 3, 1, 3, 3, 1, 3, 3],0],
+	[[1, 3, 3, 0, 3, 3, 1, 3, 3],3],
+	[[1, 3, 3, 1, 3, 3, 0, 3, 3],6],
+	[[3, 0, 3, 3, 1, 3, 3, 1, 3],1],
+	[[3, 1, 3, 3, 0, 3, 3, 1, 3],4],
+	[[3, 1, 3, 3, 1, 3, 3, 0, 3],7],
+	[[3, 3, 0, 3, 3, 1, 3, 3, 1],2],
+	[[3, 3, 1, 3, 3, 0, 3, 3, 1],5],
+	[[3, 3, 1, 3, 3, 1, 3, 3, 0],8],
+	//Diagonal
+	[[0, 3, 3, 3, 1, 3, 3, 3, 1],0],
+	[[1, 3, 3, 3, 0, 3, 3, 3, 1],4],
+	[[1, 3, 3, 3, 1, 3, 3, 3, 0],8],
+	[[3, 3, 0, 3, 1, 3, 1, 3, 3],2],	
+	[[3, 3, 1, 3, 0, 3, 1, 3, 3],4],	
+	[[3, 3, 1, 3, 1, 3, 0, 3, 3],6],
 ];
 var moveToBlockWin = [
-	[(/ XX....../),0],
-	[(/X X....../),1],
-	[(/XX ....../),2],
-	[(/... XX.../),3],
-	[(/...X X.../),4],
-	[(/...XX .../),5],
-	[(/...... XX/),6],
-	[(/......X X/),7],
-	[(/......XX /),8],
-	[(/ ..X..X../),0],
-	[(/X.. ..X../),3],
-	[(/X..X.. ../),6],
-	[(/. ..X..X./),1],
-	[(/.X.. ..X./),4],
-	[(/.X..X.. ./),7],
-	[(/.. ..X..X/),2],
-	[(/..X.. ..X/),5],
-	[(/..X..X.. /),8],
-	[(/ ...X...X/),0],
-	[(/X... ...X/),4],
-	[(/X...X... /),8],
-	[(/.. .X.X../),2],
-	[(/..X. .X../),4],
-	[(/..X.X. ../),6]
+	//Vertical
+	[[0, 2, 2, 3, 3, 3, 3, 3, 3],0],
+	[[2, 0, 2, 3, 3, 3, 3, 3, 3],1],
+	[[2, 2, 0, 3, 3, 3, 3, 3, 3],2],
+	[[3, 3, 3, 0, 2, 2, 3, 3, 3],3],
+	[[3, 3, 3, 2, 0, 2, 3, 3, 3],4],
+	[[3, 3, 3, 2, 2, 0, 3, 3, 3],5],
+	[[3, 3, 3, 3, 3, 3, 0, 2, 2],6],
+	[[3, 3, 3, 3, 3, 3, 2, 0, 2],7],
+	[[3, 3, 3, 3, 3, 3, 2, 2, 0],8],
+	//Horizontal
+	[[0, 3, 3, 2, 3, 3, 2, 3, 3],0],
+	[[2, 3, 3, 0, 3, 3, 2, 3, 3],3],
+	[[2, 3, 3, 2, 3, 3, 0, 3, 3],6],
+	[[3, 0, 3, 3, 2, 3, 3, 2, 3],1],
+	[[3, 2, 3, 3, 0, 3, 3, 2, 3],4],
+	[[3, 2, 3, 3, 2, 3, 3, 0, 3],7],
+	[[3, 3, 0, 3, 3, 2, 3, 3, 2],2],
+	[[3, 3, 2, 3, 3, 0, 3, 3, 2],5],
+	[[3, 3, 2, 3, 3, 2, 3, 3, 0],8],
+	//Diagonal
+	[[0, 3, 3, 3, 2, 3, 3, 3, 2],0],
+	[[2, 3, 3, 3, 0, 3, 3, 3, 2],4],
+	[[2, 3, 3, 3, 2, 3, 3, 3, 0],8],
+	[[3, 3, 0, 3, 2, 3, 2, 3, 3],2],
+	[[3, 3, 2, 3, 0, 3, 2, 3, 3],4],
+	[[3, 3, 2, 3, 2, 3, 0, 3, 3],6]
 ];
 
 var moveToCorners = [
 	//Pattern 1
-	[(/  XX.. ../), 0],
-	[(/ X .. ..X/), 2],
-	[(/X.. .. X /), 6],
-	[(/.. ..XX  /), 8],
+	[[0, 0, 2, 2, 3, 3, 0, 3, 3], 0],
+	[[0, 2, 0, 3, 3, 0, 3, 3, 2], 2],
+	[[2, 3, 3, 0, 3, 3, 0, 2, 0], 6],
+	[[3, 3, 0, 3, 3, 2, 2, 0, 0], 8],
 	//Pattern 2
-	[(/ X  ..X../), 0],
-	[(/X  ..X.. /), 2],
-	[(/ ..X..  X/), 6],
-	[(/..X..  X /), 8],
+	[[0, 2, 0, 0, 3, 3, 2, 3, 3], 0],
+	[[2, 0, 0, 3, 3, 2, 3, 3, 0], 2],
+	[[0, 3, 3, 2, 3, 3, 0, 0, 2], 6],
+	[[3, 3, 2, 3, 3, 0, 0, 2, 0], 8],
 	//Pattern 3
-	[(/ X X.. ../), 0],
-	[(/ X ..X.. /), 2],
-	[(/ ..X.. X /), 6],
-	[(/.. ..X X /), 8]
+	[[0, 2, 0, 2, 3, 3, 0, 3, 3], 0],
+	[[0, 2, 0, 3, 3, 2, 3, 3, 0], 2],
+	[[0, 3, 3, 2, 3, 3, 0, 2, 0], 6],
+	[[3, 3, 0, 3, 3, 2, 0, 2, 0], 8]
 ];
 
 var winningPatterns = [
-	[(/OOO....../),'O'],
-	[(/...OOO.../),'O'],
-	[(/......OOO/),'O'],
-	[(/O..O..O../),'O'],
-	[(/.O..O..O./),'O'],
-	[(/..O..O..O/),'O'],
-	[(/O...O...O/),'O'],
-	[(/..O.O.O../),'O'],
-	[(/XXX....../),'X'],
-	[(/...XXX.../),'X'],
-	[(/......XXX/),'X'],
-	[(/X..X..X../),'X'],
-	[(/.X..X..X./),'X'],
-	[(/..X..X..X/),'X'],
-	[(/X...X...X/),'X'],
-	[(/..X.X.X../),'X']
+	[[1, 1, 1, 3, 3, 3, 3, 3, 3], 1],
+	[[3, 3, 3, 1, 1, 1, 3, 3, 3], 1],
+	[[3, 3, 3, 3, 3, 3, 1, 1, 1], 1],
+	[[1, 3, 3, 1, 3, 3, 1, 3, 3], 1],
+	[[3, 1, 3, 3, 1, 3, 3, 1, 3], 1],
+	[[3, 3, 1, 3, 3, 1, 3, 3, 1], 1],
+	[[1, 3, 3, 3, 1, 3, 3, 3, 1], 1],
+	[[3, 3, 1, 3, 1, 3, 1, 3, 3], 1],
+	[[2, 2, 2, 3, 3, 3, 3, 3, 3], 2],
+	[[3, 3, 3, 2, 2, 2, 3, 3, 3], 2],
+	[[3, 3, 3, 3, 3, 3, 2, 2, 2], 2],
+	[[2, 3, 3, 2, 3, 3, 2, 3, 3], 2],
+	[[3, 2, 3, 3, 2, 3, 3, 2, 3], 2],
+	[[3, 3, 2, 3, 3, 2, 3, 3, 2], 2],
+	[[2, 3, 3, 3, 2, 3, 3, 3, 2], 2],
+	[[3, 3, 2, 3, 2, 3, 2, 3, 3], 2]
 ];
-/* eslint-enable no-regex-spaces */
 
 var players = [];
 var currentPlayer;
@@ -108,26 +123,28 @@ function Player(symbol, playerType){
 			this.getMove = getCompMove;
 			break;
 		case playerTypes.HUMAN:
-		default:
 			this.getMove = getHumanMove;
+			break;
+		default:
+			this.getMove = function(){ throw 'Null player can\'t move'; };
 			break;
 	}
 }
 
+Player.NullPlayer = new Player(' ');
+
 function Board(){
-	var boardState = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
+	var boardState = new Array(9).fill(Player.NullPlayer);
 	var winner = null;
 	var isFull = false;
 	
 	var checkWinner = function(){
-		var winningSymbol = getFromPattern(winningPatterns, boardState);
-		if (winningSymbol != -1){
-			winner = winningSymbol;
-		}
+		var winningResult = getFromPattern(winningPatterns, boardState);
+		winner = winningResult == PositionEnum.SELF ? currentPlayer : null;
 	};
 	
 	var checkFull = function(){
-		isFull = boardState.indexOf(' ') == -1;
+		isFull = boardState.indexOf(Player.NullPlayer) == -1;
 	};
 
 	this.getState = function(){
@@ -139,7 +156,7 @@ function Board(){
 	};
 
 	this.move = function(position, player){
-		boardState[position] = player.symbol;
+		boardState[position] = player;
 		checkFull();
 		checkWinner();
 	};
@@ -151,9 +168,9 @@ function Board(){
 	};
 
 	this.printBoard = function(){
-		return 	` ${boardState[0]} | ${boardState[1]} | ${boardState[2]}\n===+===+===\n` +
-				` ${boardState[3]} | ${boardState[4]} | ${boardState[5]}\n===+===+===\n` +
-				` ${boardState[6]} | ${boardState[7]} | ${boardState[8]}`;
+		return 	` ${boardState[0].symbol} | ${boardState[1].symbol} | ${boardState[2].symbol}\n===+===+===\n` +
+				` ${boardState[3].symbol} | ${boardState[4].symbol} | ${boardState[5].symbol}\n===+===+===\n` +
+				` ${boardState[6].symbol} | ${boardState[7].symbol} | ${boardState[8].symbol}`;
 	};
 }
 
@@ -172,7 +189,7 @@ var getHumanMove = function(board){
 
 		var position = input - 1;
 
-		if(board[position] != ' '){
+		if(board[position] != Player.NullPlayer){
 			console.log('That position is already taken. Try another one:\n');
 			continue;
 		}
@@ -182,18 +199,18 @@ var getHumanMove = function(board){
 };
 
 var getCompMove = function(board){
-	var position = getFromPattern(moveToWin, board);
-	if (position == -1){
-		position = getFromPattern(moveToBlockWin, board);
+	var position = getFromPattern(moveToWin, board, this);
+	if (position == false){
+		position = getFromPattern(moveToBlockWin, board, this);
 	}
-	if (position == -1){
-		position = getFromPattern(moveToCorners, board);
+	if (position == false){
+		position = getFromPattern(moveToCorners, board, this);
 	}
-	if (position == -1 && board[4] == ' '){
+	if (position == false && board[4] == Player.NullPlayer){
 		position = 4;
 	}
-	if (position == -1){
-		position = board.indexOf(' ');
+	if (position == false){
+		position = board.indexOf(Player.NullPlayer);
 	}
 
 	console.log(`Player ${this.symbol} selected position ${position}`);
@@ -202,14 +219,16 @@ var getCompMove = function(board){
 };
 
 var getFromPattern = function(patternList, board){
-	var board_string = board.join('');
-	for(var i = 0; i < patternList.length; i++){
-		var array = board_string.match(patternList[i][0]);
-		if (array){
-			return patternList[i][1];
-		}
-	}
-	return -1;
+	var mappedBoard = board.map(x =>
+		x == Player.NullPlayer ? PositionEnum.NONE : (x == currentPlayer ? PositionEnum.SELF : PositionEnum.ANY)
+	);
+
+	var result = patternList.find( p =>
+		p[0].every( (x, i) => x == mappedBoard[i] || x == PositionEnum.ANY)
+	);
+
+	if (result instanceof Array) { return result[1]; }
+	return false;
 };
 
 var exit = function(){ process.exit(); };
@@ -240,14 +259,14 @@ var play = function(){
 
 	/* eslint-disable-next-line no-constant-condition */
 	while(true){
-		var playerPos = currentPlayer.getMove(board.getState().boardState);
+		var playerPos = currentPlayer.getMove(board.getState().boardState, currentPlayer);
 		board.move(playerPos, currentPlayer);
 		board.show();
 
 		var gameState = board.getState();
 		
 		if (gameState.winner != null){
-			console.log(`The winner is player ${gameState.winner}!`);
+			console.log(`The winner is player ${gameState.winner.symbol}!`);
 			exit();
 		}
 		
