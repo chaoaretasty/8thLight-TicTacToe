@@ -120,7 +120,7 @@ function Board(){
 	var isFull = false;
 	
 	var checkWinner = function(){
-		var winningSymbol = get_from_pattern(winningPatterns, boardState);
+		var winningSymbol = getFromPattern(winningPatterns, boardState);
 		if (winningSymbol != -1){
 			winner = winningSymbol;
 		}
@@ -163,8 +163,6 @@ var getHumanMove = function(board){
 	{
 		var ans = readlineSync.question(`Player ${this.symbol} Enter a number from 1 to 9:\n`);
 		
-		if(ans=='quit'){exit();}
-
 		var input = Number.parseInt(ans);
 
 		if(isNaN(input) || input < 1 || input > 9){
@@ -184,12 +182,12 @@ var getHumanMove = function(board){
 };
 
 var getCompMove = function(board){
-	var position = get_from_pattern(moveToWin, board);
+	var position = getFromPattern(moveToWin, board);
 	if (position == -1){
-		position = get_from_pattern(moveToBlockWin, board);
+		position = getFromPattern(moveToBlockWin, board);
 	}
 	if (position == -1){
-		position = get_from_pattern(moveToCorners, board);
+		position = getFromPattern(moveToCorners, board);
 	}
 	if (position == -1 && board[4] == ' '){
 		position = 4;
@@ -203,12 +201,12 @@ var getCompMove = function(board){
 	return position;
 };
 
-var get_from_pattern = function(pattern, board){
+var getFromPattern = function(patternList, board){
 	var board_string = board.join('');
-	for(var i = 0; i < pattern.length; i++){
-		var array = board_string.match(pattern[i][0]);
+	for(var i = 0; i < patternList.length; i++){
+		var array = board_string.match(patternList[i][0]);
 		if (array){
-			return pattern[i][1];
+			return patternList[i][1];
 		}
 	}
 	return -1;
