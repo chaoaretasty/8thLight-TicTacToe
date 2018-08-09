@@ -1,5 +1,4 @@
 //While node is an asynchronous environment synchronous user input is an acceptable exception
-//At the very least while refactoring it makes sense to have this syncronous
 const readlineSync = require('readline-sync');
 
 var TicTacToe = {};
@@ -111,8 +110,6 @@ var TicTacToe = {};
 		]
 	};
 	
-	var players = [];
-	var currentPlayer;
 	var playerTypes = {
 		HUMAN: 'Human',
 		COMPUTER_HARD: 'Computer - Hard'
@@ -185,8 +182,8 @@ var TicTacToe = {};
 		var winner = null;
 		var isFull = false;
 		
-		var checkWinner = function(){
-			var winningResult = getFromPattern(Patterns.winningPatterns, boardState);
+		var checkWinner = function(currentPlayer){
+			var winningResult = getFromPattern(Patterns.winningPatterns, boardState, currentPlayer);
 			winner = winningResult == PositionEnum.SELF ? currentPlayer : null;
 		};
 		
@@ -202,10 +199,10 @@ var TicTacToe = {};
 			};
 		};
 	
-		this.move = function(position, player){
-			boardState[position] = player;
+		this.move = function(position, currentPlayer){
+			boardState[position] = currentPlayer;
 			checkFull();
-			checkWinner();
+			checkWinner(currentPlayer);
 		};
 	
 		this.show = function(){
@@ -221,9 +218,7 @@ var TicTacToe = {};
 		};
 	}
 	
-	
-	
-	var getFromPattern = function(patternList, board){
+	var getFromPattern = function(patternList, board, currentPlayer){
 		var mappedBoard = board.map(x =>
 			x == Player.NullPlayer ? PositionEnum.NONE : (x == currentPlayer ? PositionEnum.SELF : PositionEnum.OPPONENT)
 		);
@@ -235,29 +230,54 @@ var TicTacToe = {};
 		if (result instanceof Array) { return result[1]; }
 		return false;
 	};
-	
-	var exit = function(){ process.exit(); };
-	
+		
 	var play = function(){
+		var anotherGame = true;
+		while (anotherGame){
+			playGame();
+			anotherGame = readlineSync.keyInYN('Would you like to play again?');
+		}
+	};
+
+	var getPlayers = function(){
+		var players = [];
 		var types = [playerTypes.HUMAN, playerTypes.COMPUTER_HARD];
-		var p1Symbol, p2Symbol;
-		var p1 = readlineSync.keyInSelect(types, 'Select player 1', { cancel:false });
-		p1Symbol = readlineSync.keyIn('Select player 1 symbol:');
-		var p2 = readlineSync.keyInSelect(types, 'Select player 2', { cancel:false });
+		var p1Type, p2Type, p1Symbol, p2Symbol;
+		var validSymbol = false;
+
+		p1Type = readlineSync.keyInSelect(types, 'Select player 1', { cancel:false });
+		while(!validSymbol){
+			p1Symbol = readlineSync.keyIn('Select player 1 symbol:');
+			if (p1Symbol == ' '){
+				console.log('Space is not allowed as a symbol');
+			} else {
+				validSymbol = true;
+			}
+		}
+
+		p2Type = readlineSync.keyInSelect(types, 'Select player 2', { cancel:false });
 	
-		var sameSymbol = true;
+		validSymbol = false;
 	
-		while(sameSymbol){
+		while(!validSymbol){
 			p2Symbol = readlineSync.keyIn('Select player 2 symbol:');
-			sameSymbol = p1Symbol == p2Symbol;
-			if(sameSymbol){
+			if (p2Symbol == ' '){
+				console.log('Space is not allowed as a symbol');
+			} else if (p1Symbol == p2Symbol){
 				console.log('Player 2 must use a different symbol:');
+			} else {
+				validSymbol = true;
 			}
 		}
 	
-		players.push(new Player(p1Symbol, types[p1]), new Player(p2Symbol, types[p2]));
-	
-		currentPlayer = players[0];
+		players.push(new Player(p1Symbol, types[p1Type]), new Player(p2Symbol, types[p2Type]));
+
+		return players;
+	};
+
+	var playGame = function(){
+		var players = getPlayers();
+		var currentPlayer = players[0];
 	
 		var board = new Board();
 		board.show();
@@ -272,12 +292,12 @@ var TicTacToe = {};
 			
 			if (gameState.winner != null){
 				console.log(`The winner is player ${gameState.winner.symbol}!`);
-				exit();
+				return;
 			}
 			
 			if(gameState.isFull){
 				console.log('Tied game!');
-				exit();
+				return;
 			}
 			
 			currentPlayer = players[0] == currentPlayer ? players[1] : players[0];
